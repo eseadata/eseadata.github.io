@@ -4,9 +4,13 @@
 
 The East and Southeast Asian (ESEA) Data Collective is an initiative to gather and analyse data on issues affecting ESEA people in the UK.
 
-It grew out of a collaboration on hate crime data with [End Violence and Racism Against East and Southeast Asian Communities (EVR ESEA)](https://evresea.com/), [Voice ESEA](https://www.voiceesea.com/) and [King's College London](https://publicdatalab.org/).
+It grew out of a collaboration on hate crime data with [End Violence and Racism Against East and Southeast Asian Communities (EVR ESEA)](https://evresea.com/), [Voice ESEA](https://www.voiceesea.com/), and researchers and students at [King's College London](https://kcl.ac.uk/) and the [Public Data Lab](https://publicdatalab.org/).
 
 ## Data on hate crime reporting
+
+### 2020-2021
+
+* [Data compiled by ESEA Data Collective](https://docs.google.com/spreadsheets/d/1bWddAsgbulvfxSnhOvYTAXIRKo7IfG159a-EYaHx6_w/edit#gid=1089871040)
 
 ### 2019-2020 
 
