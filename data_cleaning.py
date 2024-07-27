@@ -9,9 +9,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 from gspread_dataframe import set_with_dataframe
 
 import datetime as dt
-import pandas as pd
 import numpy as np
 import os
+
+!pip install pandas==1.4.0
+import pandas as pd
 
 # Google Service Account connection
 json_cred = '/content/gdrive/My Drive/Iteration 3/3 Calculations/Google Service Account Credentials/evr-data-cleaning-colab.json' # Change to your own JSON here
@@ -21,7 +23,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(json_cred, scope)
 client = gspread.authorize(creds)
 gsheet_containing_data = 'https://docs.google.com/spreadsheets/d/11WsLfGWv086CNEKAB5tJkakBwxIYsfx_a8w7w1ohIf4/edit#gid=1210689496' # Change URL here from testing to actual sheet
 
-def melt_data_to_dataframe(sheet_url, excluded_sheet_names): 
+def melt_data_to_dataframe(sheet_url, exclude_sheet_keywords):
     workbook = client.open_by_url(sheet_url)
     sheets = workbook.worksheets()
     """ Takes all data in sheets containing response data and return them in a DataFrame """
@@ -29,26 +31,26 @@ def melt_data_to_dataframe(sheet_url, excluded_sheet_names):
     melted_df = pd.DataFrame(columns=['Police Force', 'Year', 'Month', 'Ethnicity', 'Count'])
 
     for sheet in sheets:
-        if sheet.title in excluded_sheet_names:
+        # if sheet.title in exclude_sheet_keywords:
+        if any(t in sheet.title.lower() for t in exclude_sheet_keywords):
             continue  # Skip excluded sheets
 
         data = sheet.get_all_values()
         headers = data[0]
-        ethnic_groups = headers[4:]
+        ethnic_groups = headers[3:]
 
-        for row in data[1:]:  # Skip headers row
+        for row in data[1:]:
             police_force, year, month = row[:3]
-            for i, count in enumerate(row[4:]):  
-                new_row = {'Police Force': police_force, 'Year': year, 'Month': month,
-                           'Ethnicity': ethnic_groups[i], 'Count': count}
+            for i, count in enumerate(row[3:]):
+                new_row = {'Police Force': police_force, 'Year': year, 'Month': month, 'Ethnicity': ethnic_groups[i], 'Count': count}
                 melted_df = melted_df.append(new_row, ignore_index=True)
+        print(f"{sheet.title} melt complete")
 
     return melted_df
 
 sheet_url = gsheet_containing_data
-excluded_sheet_names = ['READ/UPDATEME', 'goal', 'colnames-ethnicity', 'ethnicity-tagging', 'Consolidation', 'Jamie_Dorset'] # To remove 'Jamie_Dorest
-melted_df = melt_data_to_dataframe(sheet_url, excluded_sheet_names)
-melted_df['Count'] = pd.to_numeric(melted_df['Count'], errors='coerce').fillna(0).astype(int)
+exclude_sheet_keywords = ['_draft', '_year', 'mapping', 'goal', 'ethnic', 'updateme', 'comments', 'consolidation']
+melted_df = melt_data_to_dataframe(sheet_url, exclude_sheet_keywords)
 
 # Create MONTHLY DATA table, excludes responses that do not provide monthly berakdown
 df_month = melted_df[(melted_df['Month'].str.lower() != 'na') & (melted_df['Count'] != '')]
@@ -87,7 +89,6 @@ worksheet_name = 'Yearly_Consolidation'
 clear_and_write_to_sheet(df_year, sheet_url, worksheet_name)
 
 
-# Data Validation
 # Check yearly and monthly aggregates between raw data and df_month and df_year tally
 sum_raw_response_all = melted_df['Count'].sum()
 sum_raw_response_month = melted_df[(melted_df['Month'].str.lower() != 'na') & (melted_df['Month'] != '')]['Count'].sum()
@@ -96,19 +97,20 @@ month_consol_total = df_month['Count'].sum()
 
 
 # Check total number of unique police departments tally between raw data and df_month and df_year
-def count_sheets(sheet_url, excluded_sheet_names):
+def count_sheets(sheet_url, exclude_sheet_keywords):
     workbook = client.open_by_url(sheet_url)
     sheets = workbook.worksheets()
     sheet_count = []
-    for sheet in sheets:      
-      if sheet.title not in excluded_sheet_names:
+    for sheet in sheets:
+      # if sheet.title not in excluded_sheet_names:
+      if not any(t in sheet.title.lower() for t in exclude_sheet_keywords):
         sheet_police = (sheet.title).split('_')[1]
         sheet_count.append(sheet_police)
     return(len(sheet_count))
 
 sheet_url = gsheet_containing_data
-excluded_sheet_names = ['READ/UPDATEME', 'goal', 'colnames-ethnicity', 'ethnicity-tagging', 'Monthly_Consolidation', 'Yearly_Consolidation', 'Jamie_Dorset', 'Jamie_Humberside', 'Jamie_Kent'] # To remove 'Jamie_Dorest
-no_of_police_force = count_sheets(sheet_url, excluded_sheet_names)
+exclude_sheet_keywords = ['_draft', '_year', 'mapping', 'goal', 'ethnic', 'updateme', 'comments', 'consolidation']
+no_of_police_force = count_sheets(sheet_url, exclude_sheet_keywords)
 
 count_year_police = df_year['Police Force'].nunique() # check unique number of police departments in df_year
 count_month_police_p1 = df_month['Police Force'].nunique() # check unique number of police departments in df_month
@@ -122,7 +124,7 @@ print(f"Total responses aggregated in df_month: {month_consol_total}")
 print('\n')
 if sum_raw_response_all == year_consol_total and sum_raw_response_month == month_consol_total:
   print("Yearly and monthly aggregation checks: Pass")
-else: 
+else:
   print("Yearly and monthly aggregation checks: Fail")
 
 print('\n')
