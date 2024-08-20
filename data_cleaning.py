@@ -36,6 +36,11 @@ def melt_data_to_dataframe(sheet_url, excluded_sheet_names):
         headers = data[0]
         ethnic_groups = headers[4:]
 
+        # Overwrite selected ethnic groups for final comparison
+        for idx, ethnicity in enumerate(ethnic_groups):
+            if 'ESEA' in ethnicity:
+                ethnic_groups[idx] = 'ESEA' 
+
         for row in data[1:]:  # Skip headers row
             police_force, year, month = row[:3]
             for i, count in enumerate(row[4:]):  
