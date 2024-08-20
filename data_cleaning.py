@@ -86,6 +86,21 @@ clear_and_write_to_sheet(df_month, sheet_url, worksheet_name)
 worksheet_name = 'Yearly_Consolidation'
 clear_and_write_to_sheet(df_year, sheet_url, worksheet_name)
 
+# Takes all distinct ethnicity labels and outputs to another sheet
+def refresh_ethnicities():    
+    all_ethnicities = []
+    for sheet in worksheets:
+        if '_' in sheet.title and not sheet.title.endswith("_draft") :
+            headers = sheet.row_values(1)
+            for column in headers:
+                if column.strip() not in ('Police Force', 'Police', 'Year', 'Month', 'Total', 'Crime/ Incident', 'Ethnic Label Type'):
+                    all_ethnicities.append(column)
+    all_ethnicities = list(dict.fromkeys(all_ethnicities))
+    all_ethnicities = [[e] for e in all_ethnicities]
+    output_sheet = esea_spreadsheet.worksheet("Ethnicity Mapping New")
+    output_sheet.clear()
+    output_sheet.update([['Ethnicity', 'Ethnicity Group']], 'A1:B1')
+    output_sheet.update(all_ethnicities, 'A2:A'+str(len(all_ethnicities)+1))
 
 # Data Validation
 # Check yearly and monthly aggregates between raw data and df_month and df_year tally
